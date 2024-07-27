@@ -51,7 +51,21 @@ interface MainWindowProps {
 const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
     const [sounds, setSounds] = useState<Sound[]>([]);
     const [isDragging, setIsDragging] = useState(false);
+    const [mousePosition, setMousePosition] = useState({ x:0, y:0 });
     const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      const updateMousePosition = (ev: MouseEvent) => {
+        setMousePosition({ x:ev.clientX, y:ev.clientY});
+        // console.log(`${ev.clientX}, ${ev.clientY}`);
+      };
+
+      window.addEventListener('mousemove', updateMousePosition);
+
+      return () => {
+        window.removeEventListener('mousemove', updateMousePosition);
+      };
+    }, []);
 
     useEffect(() => {
         console.log("MainWindow mounted");
@@ -80,8 +94,10 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
 
       if (audioFile && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        const x = rect.width / 2;
-        const y = rect.height / 2;
+        // const x = rect.width / 2;
+        // const y = rect.height / 2;
+        const x = mousePosition.x;
+        const y = mousePosition.y;
 
         const fileName = audioFile.split(/[\\/]/).pop() || 'Unknown';
 
@@ -93,8 +109,17 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
             y,
           });
 
+          console.log(`LITERALLY ${x}, ${y}`);
+
           console.log("New Sound added: ", newSound);
           setSounds(prevSounds => [...prevSounds, newSound]);
+
+          invoke('update_sound_position', {
+            id: newSound.id,
+            x: x,
+            y: y,
+          });
+          
         } catch(error) {
           console.error('Failed to add sound: ', error);
           alert(`Failed to add sound: ${error}`);
@@ -102,6 +127,15 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
       } else {
         console.log("No vaild audio file found in the drop");
         alert("Please drop a .mp3 or .wav");
+      }
+    };
+
+    const playSound = async (soundPath: string) => {
+      try {
+        await invoke('play_sound', { path: soundPath});
+      } catch (error) {
+        console.error('Failed to play the sound: ', error);
+        alert(`Failed to play the sound: ${error}`);
       }
     };
 
@@ -130,8 +164,11 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
                 });
               }}
             >
-              <DraggableButton>{sound.name}</DraggableButton>
-            </Draggable>
+              <DraggableButton
+                onClick={() => isLocked ? playSound(sound.path) : ''}
+              >
+                  {sound.name}</DraggableButton>
+              </Draggable>
           ))}
         </MainWindowContainer>
       );

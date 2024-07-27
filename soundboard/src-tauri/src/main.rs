@@ -3,11 +3,11 @@
 
 use std::fs;
 use std::io::Read;
-use std::path::PathBuf;
-use std::io::Write;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use tauri::Manager;
+use rodio::{Decoder, OutputStream, Sink};
+use std::io::BufReader;
+use std::fs::File;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Sound {
@@ -83,6 +83,21 @@ fn update_sound_position(id: String, x: f64, y: f64) -> Result<(), String> {
 }
 
 
+#[tauri::command]
+fn play_sound(path: String) -> Result<(), String> {
+    std::thread::spawn(move || {
+        let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+        let sink = Sink::try_new(&stream_handle).unwrap();
+
+        let file = BufReader::new(File::open(path).unwrap());
+        let source = Decoder::new(file).unwrap();
+
+        sink.append(source);
+        sink.sleep_until_end();
+    });
+
+    Ok(())
+}
 
 
 
@@ -98,7 +113,7 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            get_sounds, add_sound, update_sound_position
+            get_sounds, add_sound, update_sound_position, play_sound,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
