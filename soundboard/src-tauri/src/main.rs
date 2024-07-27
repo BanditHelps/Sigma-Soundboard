@@ -17,6 +17,7 @@ struct Sound {
     path: String,
     x: f64,
     y: f64,
+    color: String,
 }
 
 #[tauri::command]
@@ -43,7 +44,7 @@ fn get_sounds() -> Result<Vec<Sound>, String> {
 
 
 #[tauri::command]
-fn add_sound(app_handle: tauri::AppHandle, name: String, path: String, x:f64, y:f64) -> Result<Sound, String> {
+fn add_sound(app_handle: tauri::AppHandle, name: String, path: String, x:f64, y:f64, color: String) -> Result<Sound, String> {
     println!("Adding sound: {} at ({}, {})", name, x, y);
     let app_dir = app_handle.path_resolver().app_data_dir().unwrap();
     let sounds_dir = app_dir.join("sounds");
@@ -66,6 +67,7 @@ fn add_sound(app_handle: tauri::AppHandle, name: String, path: String, x:f64, y:
         path: dest_path.to_str().unwrap().to_string(),
         x,
         y,
+        color,
     };
 
     println!("Sound added successfully: {:?}", new_sound);

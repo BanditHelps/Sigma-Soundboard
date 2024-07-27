@@ -4,6 +4,7 @@ export interface Sound {
     path: string;
     x: number;
     y: number;
+    color: string;
 }
 
 export interface Theme {

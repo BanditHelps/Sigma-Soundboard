@@ -6,6 +6,8 @@ interface SoundContextType {
   sounds: Sound[];
   addSound: (sound: Sound) => void;
   updateSoundPosition: (id: string, x: number, y: number) => void;
+  updateSound: (updatedSound: Sound) => void;
+  deleteSound: (id: string) => void;
   playSound: (path: string) => void;
   saveSounds: () => void;
   loadSounds: () => void;
@@ -27,6 +29,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         path: sound.path,
         x: sound.x,
         y: sound.y,
+        color: '#626',
       });
       setSounds(prevSounds => [...prevSounds, newSound]);
     } catch (error) {
@@ -76,8 +79,29 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const updateSound = (updatedSound: Sound) => {
+    setSounds(prevSounds =>
+        prevSounds.map(sound =>
+            sound.id === updatedSound.id ? updatedSound : sound
+        )
+    );
+  };
+
+  const deleteSound = (id: string) => {
+    setSounds(prevSounds => prevSounds.filter(sound => sound.id !== id));
+  };
+
   return (
-    <SoundContext.Provider value={{ sounds, addSound, updateSoundPosition, playSound, saveSounds, loadSounds }}>
+    <SoundContext.Provider value={{ 
+        sounds,
+        addSound, 
+        updateSoundPosition,
+        updateSound,
+        deleteSound, 
+        playSound, 
+        saveSounds, 
+        loadSounds 
+    }}>
       {children}
     </SoundContext.Provider>
   );

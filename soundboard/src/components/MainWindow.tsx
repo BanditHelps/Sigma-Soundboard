@@ -76,6 +76,7 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
           path: audioFile,
           x: mousePosition.x,
           y: mousePosition.y,
+          color: '#626'
         };
 
         addSound(newSound);
