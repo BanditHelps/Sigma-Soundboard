@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import Draggable from "react-draggable";
-import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
-import { Sound } from '../types';
+import { useSounds } from "../contexts/SoundContext";
+import SoundButton from "./SoundButton";
 
 const MainWindowContainer = styled.div`
     flex-grow: 1;
@@ -27,29 +26,12 @@ const DropZone = styled.div`
     padding: 20px;
 `;
 
-const DraggableButton = styled.button`
-    width: 150px;
-    height: 80px;
-    background-color: #4a90e2;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: move;
-    user-select: none;
-    position: absolute;
-    font-size: 14px;
-    text-align: center;
-    word-wrap: break-word;
-    padding: 5px;
-`;
-
 interface MainWindowProps {
     isLocked: boolean;
 }
 
 const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
-    const [sounds, setSounds] = useState<Sound[]>([]);
+    const { sounds, addSound } = useSounds();
     const [isDragging, setIsDragging] = useState(false);
     const [mousePosition, setMousePosition] = useState({ x:0, y:0 });
     const containerRef = useRef<HTMLDivElement>(null);
@@ -62,29 +44,22 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
 
       window.addEventListener('mousemove', updateMousePosition);
 
+      const fileHoverUnlisten = listen('file-hover', () => {
+        console.log("file Hover event was received in React");
+        setIsDragging(true);
+      });
+
+      const fileDropUnlisten = listen('file-drop', (event) => {
+        console.log("File Drop event was received in React", event);
+        setIsDragging(false);
+        handleFileDrop(event.payload as string[]);
+      });
+
       return () => {
         window.removeEventListener('mousemove', updateMousePosition);
+        fileHoverUnlisten.then(unlisten => unlisten());
+        fileDropUnlisten.then(unlisten => unlisten());
       };
-    }, []);
-
-    useEffect(() => {
-        console.log("MainWindow mounted");
-
-        const fileHoverUnlisten = listen('file-hover', () => {
-          console.log("file Hover event was received in React");
-          setIsDragging(true);
-        });
-
-        const fileDropUnlisten = listen('file-drop', (event) => {
-          console.log("File Drop event was received in React", event);
-          setIsDragging(false);
-          handleFileDrop(event.payload as string[]);
-        });
-
-        return () => {
-          fileHoverUnlisten.then(unlisten => unlisten());
-          fileDropUnlisten.then(unlisten => unlisten());
-        }
     }, []);
 
     const handleFileDrop = async (paths: string[]) => {
@@ -93,85 +68,40 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
       );
 
       if (audioFile && containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        // const x = rect.width / 2;
-        // const y = rect.height / 2;
-        const x = mousePosition.x;
-        const y = mousePosition.y;
-
         const fileName = audioFile.split(/[\\/]/).pop() || 'Unknown';
 
-        try {
-          const newSound: Sound = await invoke('add_sound', {
-            name: fileName,
-            path: audioFile,
-            x,
-            y,
-          });
+        const newSound = {
+          id: Date.now().toString(),
+          name: fileName,
+          path: audioFile,
+          x: mousePosition.x,
+          y: mousePosition.y,
+        };
 
-          console.log(`LITERALLY ${x}, ${y}`);
+        addSound(newSound);
 
-          console.log("New Sound added: ", newSound);
-          setSounds(prevSounds => [...prevSounds, newSound]);
-
-          invoke('update_sound_position', {
-            id: newSound.id,
-            x: x,
-            y: y,
-          });
-          
-        } catch(error) {
-          console.error('Failed to add sound: ', error);
-          alert(`Failed to add sound: ${error}`);
-        }
       } else {
         console.log("No vaild audio file found in the drop");
         alert("Please drop a .mp3 or .wav");
       }
     };
 
-    const playSound = async (soundPath: string) => {
-      try {
-        await invoke('play_sound', { path: soundPath});
-      } catch (error) {
-        console.error('Failed to play the sound: ', error);
-        alert(`Failed to play the sound: ${error}`);
-      }
-    };
-
     return (
-        <MainWindowContainer
-          ref={containerRef}
-          style={{ 
-            borderColor: isDragging ? '#007bff' : '#ccc',
-            backgroundColor: isDragging ? 'rgba(0, 123, 255, 0.1)' : 'transparent'
-          }}
-        >
-          <DropZone>
-            {isDragging ? 'Drop the file here' : 'Drag and drop audio files here'}
-          </DropZone>
-          {sounds.map((sound: Sound) => (
-            <Draggable
-              key={sound.id}
-              bounds="parent"
-              disabled={isLocked}
-              defaultPosition={{ x: sound.x, y: sound.y }}
-              onStop={(e, data) => {
-                invoke('update_sound_position', {
-                  id: sound.id,
-                  x: data.x,
-                  y: data.y,
-                });
-              }}
-            >
-              <DraggableButton
-                onClick={() => isLocked ? playSound(sound.path) : ''}
-              >
-                  {sound.name}</DraggableButton>
-              </Draggable>
-          ))}
-        </MainWindowContainer>
-      );
+      <MainWindowContainer
+        ref={containerRef}
+        style={{ 
+          borderColor: isDragging ? '#007bff' : '#ccc',
+          backgroundColor: isDragging ? 'rgba(0, 123, 255, 0.1)' : 'transparent'
+        }}
+      >
+        <DropZone>
+          {isDragging ? 'Drop the file here' : 'Drag and drop audio files here'}
+        </DropZone>
+        {sounds.map((sound) => (
+          <SoundButton key={sound.id} sound={sound} isLocked={isLocked} />
+        ))}
+      </MainWindowContainer>
+    );
 };
 
 export default MainWindow;

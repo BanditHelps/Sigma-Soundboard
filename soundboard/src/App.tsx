@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Sidebar from './components/Sidebar';
 import MainWindow from './components/MainWindow';
 import Settings from './components/Settings';
+import { SoundProvider } from './contexts/SoundContext';
 import { appWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
 import './index.css';
@@ -20,9 +21,7 @@ const MainContainer = styled.div`
 `;
 
 
-function App() {
-  console.log("App component is rendering");
-  
+function AppContent() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -60,6 +59,14 @@ function App() {
       </MainContainer>
       {isSettingsOpen && <Settings onClose={closeSettings} />}
     </AppContainer>
+  );
+}
+
+function App() {
+  return (
+    <SoundProvider>
+      <AppContent />
+    </SoundProvider>
   );
 }
 
