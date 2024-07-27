@@ -1,8 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const SidebarContainer = styled.div<{ isCollapsed: boolean }>`
-    width: ${props => props.isCollapsed ? '50px' : '200px'};
+interface SidebarContainerProps {
+    $isCollapsed: boolean;
+}
+
+const SidebarContainer = styled.div<SidebarContainerProps>`
+    width: ${props => props.$isCollapsed ? '50px' : '200px'};
     height: 100%;
     background-color: #74807d;
     transition: width 0.3s ease;
@@ -51,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     openSettings
  }) => {
     return (
-        <SidebarContainer isCollapsed={isCollapsed}>
+        <SidebarContainer $isCollapsed={isCollapsed}>
             <ToggleButton onClick={() => setIsCollapsed(!isCollapsed)}>
                 {isCollapsed ? '>' : '<'}
             </ToggleButton>
