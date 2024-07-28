@@ -75,12 +75,12 @@ const SoundButton: React.FC<SoundButtonProps> = ({ sound, isLocked }) => {
   return (
     <>
         <Draggable
-        bounds="parent"
-        disabled={isLocked}
-        defaultPosition={{ x: sound.x, y: sound.y }}
-        onStop={(e, data) => {
-            updateSoundPosition(sound.id, data.x, data.y);
-        }}
+            bounds="parent"
+            disabled={isLocked}
+            defaultPosition={{ x: sound.x, y: sound.y }}
+            onStop={(e, data) => {
+                updateSoundPosition(sound.id, data.x, data.y);
+            }}
         >
         <Button
             $color={sound.color}

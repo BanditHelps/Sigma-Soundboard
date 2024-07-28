@@ -31,6 +31,8 @@ interface MainWindowProps {
     isLocked: boolean;
 }
 
+
+
 const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
     const { sounds, addSound } = useSounds();
     const [isDragging, setIsDragging] = useState(false);
@@ -63,6 +65,38 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
       };
     }, []);
 
+    const findRandomOpenSpace = (containerRect: DOMRect, buttonWidth: number, buttonHeight: number): { x: number, y: number } => {
+      const maxAttempts = 50;
+      const margin = 10; // pixels of margin from the edges
+    
+      for (let i = 0; i < maxAttempts; i++) {
+        const x = Math.random() * (containerRect.width - buttonWidth - 2 * margin) + margin;
+        const y = Math.random() * (containerRect.height - buttonHeight - 2 * margin) + margin;
+    
+        // Check if this space overlaps with existing buttons
+        const overlaps = sounds.some(sound => {
+          const soundX = (sound.x / 100) * containerRect.width;
+          const soundY = (sound.y / 100) * containerRect.height;
+          return (
+            x < soundX + buttonWidth &&
+            x + buttonWidth > soundX &&
+            y < soundY + buttonHeight &&
+            y + buttonHeight > soundY
+          );
+        });
+    
+        if (!overlaps) {
+          return { x, y };
+        }
+      }
+    
+      // If we couldn't find an open space, just return a random position
+      return {
+        x: Math.random() * (containerRect.width - buttonWidth - 2 * margin) + margin,
+        y: Math.random() * (containerRect.height - buttonHeight - 2 * margin) + margin
+      };
+    };
+
     const handleFileDrop = async (paths: string[]) => {
       console.log("Is this even running?");
       const audioFile = paths.find(filePath => 
@@ -72,12 +106,26 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
       if (audioFile && containerRef.current) {
         const fileName = audioFile.split(/[\\/]/).pop() || 'Unknown';
 
+        // const rect = containerRef.current.getBoundingClientRect();
+        // const x = (position.x - rect.left) / rect.width * 100;
+        // const y = (position.y - rect.top) / rect.height * 100;    
+
+        const rect = containerRef.current.getBoundingClientRect();
+    
+        const buttonWidth = 150; // Adjust these values based on your actual button size
+        const buttonHeight = 80;
+
+        const { x, y } = findRandomOpenSpace(rect, buttonWidth, buttonHeight);
+        
+        
+        console.log("Drop Position: ", {x, y})
+
         const newSound: Sound = {
           id: Date.now().toString(),
           name: fileName,
           path: audioFile,
-          x: mousePosition.x,
-          y: mousePosition.y,
+          x: x,
+          y: y,
           color: '#' + Math.floor(Math.random()*16777215).toString(16), // Random color
           sound_type: 'Effect', // Default to 'Effect', user can change later
           isPlaying: false
