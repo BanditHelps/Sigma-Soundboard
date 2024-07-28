@@ -101,6 +101,7 @@ fn play_sound(id: String, path: String, sound_type: SoundType) -> Result<String,
 
 #[tauri::command]
 fn stop_sound(id: String) -> Result<(), String> {
+    println!("Attempting to stop sound: {}", id);
     let sender = AUDIO_SENDER.lock().unwrap();
     sender.send(AudioCommand::Stop(id))
         .map_err(|e| format!("Failed to send stop command: {}", e))?;

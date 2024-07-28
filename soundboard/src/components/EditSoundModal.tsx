@@ -45,7 +45,7 @@ const EditSoundModal: React.FC<EditSoundModalProps> = ({ sound, onSave, onDelete
   const [type, setType] = useState(sound.sound_type);
 
   const handleSave = () => {
-    onSave({ ...sound, name, color, path });
+    onSave({ ...sound, name, color, path, sound_type: type });
     onClose();
   };
 

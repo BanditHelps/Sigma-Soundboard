@@ -81,12 +81,17 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const stopSound = async (id: string) => {
-    await invoke('stop_sound', { id });
-    setSounds(prevSounds =>
+    try {
+      await invoke('stop_sound', { id });
+      setSounds(prevSounds =>
         prevSounds.map(s =>
-            s.id === id ? { ...s, isPlaying: false } : s
+          s.id === id ? { ...s, isPlaying: false } : s
         )
-    );
+      );
+    } catch (error) {
+      console.error('Failed to stop the sound: ', error);
+      alert(`Failed to stop the sound: ${error}`);
+    }
   };
 
   const saveSounds = async () => {

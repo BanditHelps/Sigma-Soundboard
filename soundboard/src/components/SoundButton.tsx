@@ -33,8 +33,8 @@ const Button = styled.button<{ $color: string; $isPlaying: boolean; $sound_type:
   word-wrap: break-word;
   padding: 5px;
   border: 4px solid transparent;
-  animation: ${props => props.$isPlaying && props.$sound_type === 'Effect' ? rainbowAnimation : 'none'} 2s linear infinite;
-  box-shadow: ${props => props.$isPlaying && props.$sound_type === 'Music' ? '0 0 10px 5px rgba(255, 255, 255, 0.5)' : 'none'};
+  animation: ${props => props.$isPlaying && props.$sound_type === 'Music' ? rainbowAnimation : 'none'} 2s linear infinite;
+  box-shadow: ${props => props.$isPlaying && props.$sound_type === 'Effect' ? '0 0 10px 5px rgba(255, 255, 255, 0.5)' : 'none'};
 `;
 
 
@@ -49,7 +49,18 @@ const SoundButton: React.FC<SoundButtonProps> = ({ sound, isLocked }) => {
 
   const handleClick = () => {
     if (isLocked) {
-        playSound(sound.id);
+        if (sound.isPlaying) {
+            if (sound.sound_type === "Effect") {
+                stopSound(sound.id);
+                playSound(sound.id);
+            } else {
+                stopSound(sound.id);
+            }
+            
+        } else {
+            playSound(sound.id);
+        }
+        
     }
   };
 
