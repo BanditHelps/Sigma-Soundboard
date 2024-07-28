@@ -7,6 +7,7 @@ export interface Sound {
     color: string;
     sound_type: 'Effect' | 'Music';
     isPlaying: boolean;
+    keybind: string | null;
 }
 
 export interface Theme {

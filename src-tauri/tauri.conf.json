@@ -23,6 +23,9 @@
         "message": true,
         "open": true,
         "save": true
+      },
+      "globalShortcut": {
+        "all": true
       }
     },
     "windows": [

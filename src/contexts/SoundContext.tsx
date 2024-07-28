@@ -12,6 +12,8 @@ interface SoundContextType {
   stopSound: (id: string) => void;
   saveSounds: () => void;
   loadSounds: () => void;
+  registerKeybind: (id: string, keybind: string) => void;
+  unregisterKeybind: (id: string, keybind: string) => void;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -131,6 +133,32 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSounds(prevSounds => prevSounds.filter(sound => sound.id !== id));
   };
 
+  const registerKeybind = async (id: string, keybind: string) => {
+    try {
+      await invoke('register_keybind', { id, keybind });
+      setSounds(prevSounds =>
+        prevSounds.map(sound =>
+          sound.id === id ? { ...sound, keybind } : sound
+        )
+      );
+    } catch (error) {
+      console.error('Failed to register keybind: ', error);
+    }
+  };
+  
+  const unregisterKeybind = async (id: string, keybind: string) => {
+    try {
+      await invoke('unregister_keybind', { keybind });
+      setSounds(prevSounds =>
+        prevSounds.map(sound =>
+          sound.id === id ? { ...sound, keybind: null } : sound
+        )
+      );
+    } catch (error) {
+      console.error('Failed to unregister keybind: ', error);
+    }
+  };
+
   return (
     <SoundContext.Provider value={{ 
         sounds,
@@ -141,7 +169,9 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         playSound,
         stopSound, 
         saveSounds, 
-        loadSounds 
+        loadSounds,
+        registerKeybind,
+        unregisterKeybind 
     }}>
       {children}
     </SoundContext.Provider>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Sound } from '../types';
 import { open } from '@tauri-apps/api/dialog';
@@ -43,9 +43,26 @@ const EditSoundModal: React.FC<EditSoundModalProps> = ({ sound, onSave, onDelete
   const [color, setColor] = useState(sound.color);
   const [path, setPath] = useState(sound.path);
   const [type, setType] = useState(sound.sound_type);
+  const [keybind, setKeybind] = useState<string | null>(sound.keybind);
+  const [isRecordingKeybind, setIsRecordingKeybind] = useState(false);
+
+  useEffect(() => {
+    if (isRecordingKeybind) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key !== 'Control' && e.key !== '`') {
+          setKeybind(`Alt+\`+${e.key}`);
+          setIsRecordingKeybind(false);
+        }
+      };
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isRecordingKeybind]);
 
   const handleSave = () => {
-    onSave({ ...sound, name, color, path, sound_type: type });
+    onSave({ ...sound, name, color, path, sound_type: type, keybind });
     onClose();
   };
 
@@ -80,6 +97,20 @@ const EditSoundModal: React.FC<EditSoundModalProps> = ({ sound, onSave, onDelete
           readOnly
           placeholder="Sound File Path"
         />
+        <div>
+          <Input
+            type="text"
+            value={keybind || ''}
+            readOnly
+            placeholder="Keybind"
+          />
+          <Button onClick={() => setIsRecordingKeybind(true)}>
+            {isRecordingKeybind ? 'Press a key...' : 'Set Keybind'}
+          </Button>
+          {keybind && (
+            <Button onClick={() => setKeybind(null)}>Clear Keybind</Button>
+          )}
+        </div>
         <select value={type} onChange={(e) => setType(e.target.value as 'Effect' | 'Music')}>
           <option value="Effect">Sound Effect</option>
           <option value="Music">Music</option>

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Sidebar from './components/Sidebar';
 import MainWindow from './components/MainWindow';
 import Settings from './components/Settings';
+import KeybindListener from './components/KeyboardListener';
 import { SoundProvider } from './contexts/SoundContext';
 import { appWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
@@ -47,6 +48,7 @@ function AppContent() {
 
   return (
     <AppContainer>
+      <KeybindListener />
       <Sidebar 
         isCollapsed={isSidebarCollapsed} 
         setIsCollapsed={setIsSidebarCollapsed}

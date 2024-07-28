@@ -14,7 +14,21 @@ use lazy_static::lazy_static;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::thread;
 use native_dialog::{FileDialog, MessageType, MessageDialog};
-use std::path::PathBuf;
+use tauri::GlobalShortcutManager;
+
+#[tauri::command]
+fn register_keybind(app_handle: tauri::AppHandle, id: String, keybind: String) -> Result<(), String> {
+    app_handle.global_shortcut_manager().register(&keybind, move || {
+        let sound_id = id.clone();
+        // Trigger sound playback here
+        println!("Keybind triggered for sound: {}", sound_id);
+    }).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn unregister_keybind(app_handle: tauri::AppHandle, keybind: String) -> Result<(), String> {
+    app_handle.global_shortcut_manager().unregister(&keybind).map_err(|e| e.to_string())
+}
 
 // Define our audio commands
 enum AudioCommand {
@@ -215,7 +229,7 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            get_sounds, add_sound, update_sound_position, play_sound, stop_sound, save_sounds, stop_all_sounds
+            get_sounds, add_sound, update_sound_position, play_sound, stop_sound, save_sounds, stop_all_sounds, register_keybind, unregister_keybind
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
