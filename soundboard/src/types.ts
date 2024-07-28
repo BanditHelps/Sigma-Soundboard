@@ -5,6 +5,8 @@ export interface Sound {
     x: number;
     y: number;
     color: string;
+    sound_type: 'Effect' | 'Music';
+    isPlaying: boolean;
 }
 
 export interface Theme {

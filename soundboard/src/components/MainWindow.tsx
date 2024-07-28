@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { listen } from '@tauri-apps/api/event';
 import { useSounds } from "../contexts/SoundContext";
 import SoundButton from "./SoundButton";
+import { Sound } from "../types";
 
 const MainWindowContainer = styled.div`
     flex-grow: 1;
@@ -63,6 +64,7 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
     }, []);
 
     const handleFileDrop = async (paths: string[]) => {
+      console.log("Is this even running?");
       const audioFile = paths.find(filePath => 
         filePath.toLowerCase().endsWith('.mp3') || filePath.toLowerCase().endsWith('wav')
       );
@@ -70,15 +72,17 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
       if (audioFile && containerRef.current) {
         const fileName = audioFile.split(/[\\/]/).pop() || 'Unknown';
 
-        const newSound = {
+        const newSound: Sound = {
           id: Date.now().toString(),
           name: fileName,
           path: audioFile,
           x: mousePosition.x,
           y: mousePosition.y,
-          color: '#626'
+          color: '#' + Math.floor(Math.random()*16777215).toString(16), // Random color
+          sound_type: 'Effect', // Default to 'Effect', user can change later
+          isPlaying: false
         };
-
+  
         addSound(newSound);
 
       } else {

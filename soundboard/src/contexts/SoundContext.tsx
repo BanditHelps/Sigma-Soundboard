@@ -8,7 +8,8 @@ interface SoundContextType {
   updateSoundPosition: (id: string, x: number, y: number) => void;
   updateSound: (updatedSound: Sound) => void;
   deleteSound: (id: string) => void;
-  playSound: (path: string) => void;
+  playSound: (id: string) => void;
+  stopSound: (id: string) => void;
   saveSounds: () => void;
   loadSounds: () => void;
 }
@@ -29,7 +30,8 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         path: sound.path,
         x: sound.x,
         y: sound.y,
-        color: '#626',
+        color: '#662266',
+        soundType: "Effect",
       });
       setSounds(prevSounds => [...prevSounds, newSound]);
     } catch (error) {
@@ -51,13 +53,40 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const playSound = async (path: string) => {
+  const playSound = async (id: string) => {
+    const sound = sounds.find(s => s.id === id);
+    if (!sound) return;
+  
     try {
-      await invoke('play_sound', { path });
-    } catch (error) {
-      console.error('Failed to play the sound: ', error);
-      alert(`Failed to play the sound: ${error}`);
-    }
+        const result = await invoke('play_sound', { 
+          id, 
+          path: sound.path, 
+          soundType: sound.sound_type 
+        });
+        console.log(result);  // This will log the result from the Rust function
+      } catch (error) {
+        console.error('Failed to play the sound: ', error);
+        alert(`Failed to play the sound: ${error}. Sound type: ${sound.sound_type}`);
+      }
+  
+    setSounds(prevSounds =>
+      prevSounds.map(s =>
+        s.id === id
+          ? { ...s, isPlaying: s.sound_type === 'Music' ? !s.isPlaying : true }
+          : s.sound_type === 'Music' && s.isPlaying
+          ? { ...s, isPlaying: false }
+          : s
+      )
+    );
+  };
+
+  const stopSound = async (id: string) => {
+    await invoke('stop_sound', { id });
+    setSounds(prevSounds =>
+        prevSounds.map(s =>
+            s.id === id ? { ...s, isPlaying: false } : s
+        )
+    );
   };
 
   const saveSounds = async () => {
@@ -98,7 +127,8 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateSoundPosition,
         updateSound,
         deleteSound, 
-        playSound, 
+        playSound,
+        stopSound, 
         saveSounds, 
         loadSounds 
     }}>

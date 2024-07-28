@@ -42,6 +42,7 @@ const EditSoundModal: React.FC<EditSoundModalProps> = ({ sound, onSave, onDelete
   const [name, setName] = useState(sound.name);
   const [color, setColor] = useState(sound.color);
   const [path, setPath] = useState(sound.path);
+  const [type, setType] = useState(sound.sound_type);
 
   const handleSave = () => {
     onSave({ ...sound, name, color, path });
@@ -79,6 +80,10 @@ const EditSoundModal: React.FC<EditSoundModalProps> = ({ sound, onSave, onDelete
           readOnly
           placeholder="Sound File Path"
         />
+        <select value={type} onChange={(e) => setType(e.target.value as 'Effect' | 'Music')}>
+          <option value="Effect">Sound Effect</option>
+          <option value="Music">Music</option>
+        </select>
         <Button onClick={handleChooseFile}>Choose File</Button>
         <Button onClick={handleSave}>Save</Button>
         <Button onClick={onDelete}>Delete</Button>

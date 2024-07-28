@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import Draggable from 'react-draggable';
 import { Sound } from '../types';
 import { useSounds } from '../contexts/SoundContext';
 import EditSoundModal from './EditSoundModal';
 
-const Button = styled.button<{ $color: string }>`
+
+const rainbowAnimation = keyframes`
+  0% { border-color: red; }
+  14% { border-color: orange; }
+  28% { border-color: yellow; }
+  42% { border-color: green; }
+  56% { border-color: blue; }
+  70% { border-color: indigo; }
+  84% { border-color: violet; }
+  100% { border-color: red; }
+`;
+
+const Button = styled.button<{ $color: string; $isPlaying: boolean; $sound_type: 'Effect' | 'Music' }>`
   width: 150px;
   height: 80px;
   background-color: ${props => props.$color};
@@ -13,14 +25,18 @@ const Button = styled.button<{ $color: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: move;
+  cursor: ${props => props.$isPlaying ? 'default' : 'pointer'};
   user-select: none;
   position: absolute;
   font-size: 14px;
   text-align: center;
   word-wrap: break-word;
   padding: 5px;
+  border: 4px solid transparent;
+  animation: ${props => props.$isPlaying && props.$sound_type === 'Effect' ? rainbowAnimation : 'none'} 2s linear infinite;
+  box-shadow: ${props => props.$isPlaying && props.$sound_type === 'Music' ? '0 0 10px 5px rgba(255, 255, 255, 0.5)' : 'none'};
 `;
+
 
 interface SoundButtonProps {
   sound: Sound;
@@ -28,8 +44,14 @@ interface SoundButtonProps {
 }
 
 const SoundButton: React.FC<SoundButtonProps> = ({ sound, isLocked }) => {
-  const { playSound, updateSoundPosition, updateSound, deleteSound } = useSounds();
+  const { playSound, stopSound, updateSoundPosition, updateSound, deleteSound } = useSounds();
   const [isEditing, setIsEditing] = useState(false);
+
+  const handleClick = () => {
+    if (isLocked) {
+        playSound(sound.id);
+    }
+  };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -51,10 +73,13 @@ const SoundButton: React.FC<SoundButtonProps> = ({ sound, isLocked }) => {
         >
         <Button
             $color={sound.color}
-            onClick={() => isLocked ? playSound(sound.path) : null}
+            $isPlaying={sound.isPlaying}
+            $sound_type={sound.sound_type}
+            onClick={handleClick}
             onDoubleClick={handleDoubleClick}
         >
             {sound.name}
+            {sound.isPlaying && sound.sound_type === 'Music' && ' (Playing)'}
         </Button>
         </Draggable>
         {isEditing && (
