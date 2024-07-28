@@ -23,7 +23,7 @@ const MainContainer = styled.div`
 
 function AppContent() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
+  const [isLocked, setIsLocked] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const openSettings = () => setIsSettingsOpen(true);

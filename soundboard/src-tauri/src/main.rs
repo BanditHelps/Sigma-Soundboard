@@ -13,6 +13,8 @@ use std::sync::Mutex;
 use lazy_static::lazy_static;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::thread;
+use native_dialog::{FileDialog, MessageType, MessageDialog};
+use std::path::PathBuf;
 
 // Define our audio commands
 enum AudioCommand {
@@ -133,25 +135,45 @@ pub enum SoundType {
     Effect,
     Music,
 }
+
 #[tauri::command]
 fn save_sounds(sounds: Vec<Sound>) -> Result<(), String> {
-    let app_dir = tauri::api::path::app_data_dir(&tauri::Config::default()).unwrap();
-    let sounds_file = app_dir.join("sounds.json");
-    let json = serde_json::to_string(&sounds).map_err(|e| e.to_string())?;
-    fs::write(sounds_file, json).map_err(|e| e.to_string())?;
-    Ok(())
+    let path = FileDialog::new()
+        .set_location("~/Desktop")
+        .add_filter("JSON File", &["json"])
+        .set_filename("soundboard.json")
+        .show_save_single_file()
+        .map_err(|e| e.to_string())?;
+
+    if let Some(path) = path {
+        let json = serde_json::to_string_pretty(&sounds).map_err(|e| e.to_string())?;
+        fs::write(&path, json).map_err(|e| e.to_string())?;
+        MessageDialog::new()
+            .set_type(MessageType::Info)
+            .set_title("Save Successful")
+            .set_text(&format!("Sounds saved to {:?}", path))
+            .show_alert()
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    } else {
+        Err("Save cancelled".to_string())
+    }
 }
 
 #[tauri::command]
 fn get_sounds() -> Result<Vec<Sound>, String> {
-    let app_dir = tauri::api::path::app_data_dir(&tauri::Config::default()).unwrap();
-    let sounds_file = app_dir.join("sounds.json");
-    if sounds_file.exists() {
-        let json = fs::read_to_string(sounds_file).map_err(|e| e.to_string())?;
+    let path = FileDialog::new()
+        .set_location("~/Desktop")
+        .add_filter("JSON File", &["json"])
+        .show_open_single_file()
+        .map_err(|e| e.to_string())?;
+
+    if let Some(path) = path {
+        let json = fs::read_to_string(path).map_err(|e| e.to_string())?;
         let sounds: Vec<Sound> = serde_json::from_str(&json).map_err(|e| e.to_string())?;
         Ok(sounds)
     } else {
-        Ok(Vec::new())
+        Err("Load cancelled".to_string())
     }
 }
 

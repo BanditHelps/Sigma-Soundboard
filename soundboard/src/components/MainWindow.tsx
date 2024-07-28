@@ -148,7 +148,7 @@ const MainWindow: React.FC<MainWindowProps> = ({ isLocked }) => {
         }}
       >
         <DropZone>
-          {isDragging ? 'Drop the file here' : 'Drag and drop audio files here'}
+          {/* {isDragging ? 'Drop the file here' : 'Drag and drop audio files here'} */}
         </DropZone>
         {sounds.map((sound) => (
           <SoundButton key={sound.id} sound={sound} isLocked={isLocked} />

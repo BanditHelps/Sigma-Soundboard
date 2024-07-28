@@ -19,9 +19,9 @@ const SoundContext = createContext<SoundContextType | undefined>(undefined);
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [sounds, setSounds] = useState<Sound[]>([]);
 
-  useEffect(() => {
-    loadSounds();
-  }, []);
+//   useEffect(() => {
+//     loadSounds();
+//   }, []);
 
   const addSound = async (sound: Sound) => {
     try {
@@ -95,23 +95,29 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const saveSounds = async () => {
-    try {
-      await invoke('save_sounds', { sounds });
-    } catch (error) {
-      console.error('Failed to save sounds: ', error);
-      alert(`Failed to save sounds: ${error}`);
-    }
-  };
+        try {
+            await invoke('save_sounds', { sounds });
+            console.log('Sounds saved successfully');
+        } catch (error) {
+            console.error('Failed to save sounds: ', error);
+            if (error !== "Save cancelled") {
+                throw error;
+            }
+        }
+    };
 
-  const loadSounds = async () => {
-    try {
-      const loadedSounds: Sound[] = await invoke('get_sounds');
-      setSounds(loadedSounds);
-    } catch (error) {
-      console.error('Failed to load sounds: ', error);
-      alert(`Failed to load sounds: ${error}`);
-    }
-  };
+    const loadSounds = async () => {
+        try {
+            const loadedSounds: Sound[] = await invoke('get_sounds');
+            setSounds(loadedSounds);
+            console.log('Sounds loaded successfully');
+        } catch (error) {
+            console.error('Failed to load sounds: ', error);
+            if (error !== "Load cancelled") {
+                throw error;
+            }
+        }
+    };
 
   const updateSound = (updatedSound: Sound) => {
     setSounds(prevSounds =>
